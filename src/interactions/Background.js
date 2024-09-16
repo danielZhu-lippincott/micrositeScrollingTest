@@ -1,148 +1,103 @@
-import { useScroll, useTransform, useMotionValueEvent, useMotionTemplate, motion } from "framer-motion"
-import { userRef } from 'react'
-export { Background }
+import PropTypes from "prop-types"
+import { useScroll, useTransform, motion } from "framer-motion"
+import { useRef } from 'react'
+export { Background, TransitionBackground }
 
-
-function Background({ children, currBackground, softTransitions, scrollInfo }) {
-    console.log(currBackground);
-    const { scrollYProgress } = useScroll()
-
-    let bgDivToReturn
-    let fromTop = 0
-
-    let transitionTimings = []
-    let transitionValues = []
-
-    for (let i = 0; i < scrollInfo.length; i++) {
-        if (currBackground[0] === "#") { //color string
-            bgDivToReturn = (<div style={{
-                position: "absolute",
-                key: currBackground, // change this + i
-                backgroundColor: currBackground,
-                top: fromTop * 100 + "%",
-                height: scrollInfo[i] * 100 + "%",
-                width: "100%",
-                zIndex: 0,
-            }}></div>)
-        } else { //image
-            bgDivToReturn = (<div style={{
-                position: "absolute",
-                key: currBackground,
-                top: fromTop * 100 + "%",
-                backgroundImage: "url(" + currBackground + ")", // change so its not a url
-                backgroundSize: "100% 100%",
-                backgroundAttachment: "fixed",
-                height: scrollInfo[i] * 100 + "%",
-                width: "100%",
-                zIndex: 0,
-            }}></div>)
-        }
-
-        if (softTransitions[i] > 0) {
-            let timing = scrollInfo[i]
-            transitionTimings.push(timing - softTransitions[i], timing)
-            transitionValues.push(0, 1)
-        }
-
-        fromTop += scrollInfo[i]
-    }
-
-    const transitionOpacity = useTransform(scrollYProgress, transitionTimings, transitionValues)
-    const tO = useMotionTemplate`${transitionOpacity}`
-    useMotionValueEvent(transitionOpacity, "change", latest => { tO.set(Math.round(latest * 100) / 100); console.log(Math.round(latest * 100) / 100) })
-
-    // let opacity = opacityDiff
+function Background({ background, height }) {
     return (
-        <div style={{ width: "100%", height: "100%", position: "relative" }}>
-            {bgDivToReturn}
-            <motion.div style={{
-                backgroundColor: "#202020",
-                height: "100%",
-                width: "100%",
-                opacity: tO,
-                position: "fixed",
-                zIndex: 0,
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0
-            }} />
-            {children}
-        </div>
+        <>
+            {typeof background === 'string' && background.charAt(0) === '#' ?
+                <div style={{
+                    // position: "absolute",
+                    backgroundColor: background,
+                    height: height + "vh",
+                    width: "100%",
+                    zIndex: 1,
+                }}></div> :
+                <div style={{
+                    // position: "absolute",
+                    backgroundImage: "url(" + background + ")",
+                    backgroundSize: "100% 100%",
+                    backgroundAttachment: "fixed",
+                    height: height + "vh",
+                    width: "100%",
+                    zIndex: 1,
+                }}></div>
+            }
+        </>
     )
 }
 
+Background.propTypes = {
+    background: PropTypes.any,
+    height: PropTypes.number.isRequired,
+}
 
+function TransitionBackground({ background, height, startHeight, endOpacity, preserveRatio, delayed }) {
+    const ref = useRef(null);
+    const { scrollYProgress } = useScroll({
+        target: ref,
+        offset: ["start start", "end end"]
+    })
 
-// function Background({ children, backgrounds, softTransitions, scrollInfo }) {
+    const opacity = useTransform(scrollYProgress, [0, delayed[0], delayed[1], 1], [0, 0, endOpacity, endOpacity])
 
-//     const { scrollYProgress } = useScroll()
+    return (
+        <>
+            {typeof background === 'string' && background.charAt(0) === '#' ?
+                <div ref={ref} style={{
+                    backgroundColor: background,
+                    pointerEvents: "none",
+                    height: height + "vh",
+                    width: "100%",
+                }} />
+                :
+                preserveRatio ?
+                    <div ref={ref} style={{
+                        backgroundImage: "url(" + background + ")",
+                        pointerEvents: "none",
+                        backgroundSize: 'cover',
+                        backgroundAttachment: "fixed",
+                        height: height + "vh",
+                        width: "100%",
+                    }}></div>
+                    :
+                    <div ref={ref} style={{
+                        backgroundImage: "url(" + background + ")",
+                        pointerEvents: "none",
+                        backgroundSize: "100% 100%",
+                        backgroundAttachment: "fixed",
+                        height: height + "vh",
+                        width: "100%",
+                    }}></div>
+            }
+            <motion.div style={{
+                backgroundColor: "#202020",
+                pointerEvents: "none",
+                height: height + "vh",
+                width: "100%",
+                opacity: opacity,
+                position: "absolute",
+                top: startHeight + "vh",
+            }} />
+        </>
+    )
+}
 
-//     let bgList = []
-//     let fromTop = 0
+TransitionBackground.defaultProps = {
+    startTransition: 0.5,
+    endOpacity: 1,
+    preserveRatio: false,
+    delayed: [0, 0.5],
+}
 
-//     let transitionTimings = []
-//     let transitionValues = []
-
-//     for (let i = 0; i < scrollInfo.length; i++) {
-//         if (backgrounds[i][0] === "#") {
-//             bgList.push(
-//                 <div style={{
-//                     position: "absolute",
-//                     key: backgrounds[i] + i,
-//                     backgroundColor: backgrounds[i],
-//                     top: fromTop * 100 + "%",
-//                     height: scrollInfo[i] * 100 + "%",
-//                     width: "100%",
-//                     zIndex: 0,
-//                 }}></div>
-//             )
-//         } else {
-//             bgList.push(
-//                 <div style={{
-//                     position: "absolute",
-//                     key: backgrounds[i] + i,
-//                     top: fromTop * 100 + "%",
-//                     backgroundImage: "url(" + backgrounds[i] + ")",
-//                     backgroundSize: "100% 100%",
-//                     backgroundAttachment: "fixed",
-//                     height: scrollInfo[i] * 100 + "%",
-//                     width: "100%",
-//                     zIndex: 0,
-//                 }}></div>
-//             )
-//         }
-
-//         if (softTransitions[i] > 0) {
-//             let timing = scrollInfo[i]
-//             transitionTimings.push(timing - softTransitions[i], timing)
-//             transitionValues.push(0, 1)
-//         }
-
-//         fromTop += scrollInfo[i]
-//     }
-
-//     const transitionOpacity = useTransform(scrollYProgress, transitionTimings, transitionValues)
-//     const tO = useMotionTemplate`${transitionOpacity}`
-//     useMotionValueEvent(transitionOpacity, "change", latest => { tO.set(Math.round(latest * 100) / 100); console.log(Math.round(latest * 100) / 100) })
-
-//     // let opacity = opacityDiff
-//     return (
-//         <div style={{ width: "100%", height: "100%", position: "relative" }}>
-//             {bgList}
-//             <motion.div style={{
-//                 backgroundColor: "#202020",
-//                 height: "100%",
-//                 width: "100%",
-//                 opacity: tO,
-//                 position: "fixed",
-//                 zIndex: 0,
-//                 top: 0,
-//                 left: 0,
-//                 right: 0,
-//                 bottom: 0
-//             }} />
-//             {children}
-//         </div>
-//     )
-// }
+TransitionBackground.propTypes = {
+    background: PropTypes.any,
+    height: PropTypes.number.isRequired,
+    startTransition: PropTypes.number,
+    startHeight: PropTypes.number.isRequired,
+    endOpacity: PropTypes.number,
+    scrollInfo: PropTypes.arrayOf(PropTypes.number),
+    preserveRatio: PropTypes.bool,
+    delayed: PropTypes.arrayOf(PropTypes.number),
+}

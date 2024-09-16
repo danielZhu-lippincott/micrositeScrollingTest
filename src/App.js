@@ -1,35 +1,38 @@
-import { useState } from 'react'
-import { scroll, useScroll } from "framer-motion"
 import './App.css';
+import { useState } from 'react';
 
-import gifSpriteSheet from "./images/gifSpriteSheet.png"
-import blur from './images/add-blur-from-nav.mp4'
-import gradientDefault from './images/gradientDefault.png'
-
-// import sections
-import { NamingHeader } from './sections/HeaderSection'
-import { NamingIntro } from './sections/IntroSection'
-import { NamingFirmi } from './sections/FirmiSection'
-import { NamingRobot } from './sections/RobotSection'
-
-import { Item } from './sections/Section'
-import { TransformingContent } from './interactions/TransformingContent'
-import { ScrollingGif } from './interactions/ScrollingGif'
-import { ScrollingMovie } from './interactions/ScrollingMovie'
-import { Background } from './interactions/Background'
+// import pages
+import { NamingSection } from './sections/NamingSection';
+import { ManifestoSection } from './sections/ManifestoSection'
+import { NamingExperimentSection } from './sections/NamingExperimentSection';
+import { HotDogSection } from './sections/HotDogSection';
 
 //import content constants
-import NamingSTRINGS from './constants/textContent'; //usage: NamingSTRINGS.N_Intro.paragraphs
-import { useImageLoader } from './constants/imgContent'; //usage: NamingIMAGES.cloud
+import NAMING_STRINGS from './constants/textContent';
+import { useImageLoader } from './constants/manifestoImgContent'; //usage: NamingIMAGES.cloud
+
 
 function App() {
-  const NamingIMAGES = useImageLoader();
+  const [article, setArticle] = useState('naming experiment')
+
+  const MANIFESTO_IMAGES = useImageLoader();
+
 
   return (
     <div className="App">
       <div className='App-header'>
-        <NamingHeader contentImages={NamingIMAGES}></NamingHeader>
-        <NamingIntro contentText={NamingSTRINGS.N_Intro}></NamingIntro>
+
+        {article === 'naming' && <NamingSection text={NAMING_STRINGS} />}
+        {article === 'manifesto' && <ManifestoSection images={MANIFESTO_IMAGES} />}
+        {article === 'naming experiment' && <NamingExperimentSection />}
+        {article === 'hotdog' && <HotDogSection />}
+
+        <div style={{ position: 'fixed', top: 0, color: 'white' }}>
+          <button onClick={() => {setArticle('manifesto'); console.log('manifesto')}}>Manifesto</button>
+          <button onClick={() => { setArticle('naming'); console.log('naming'); window.scrollTo(0, 0) }}>Naming</button>
+          <button onClick={() => { setArticle('naming experiment'); console.log('naming experiment'); window.scrollTo(0, 0) }}>Naming Experiment</button>
+          {/* <button onClick={() => {setArticle('hotdog'); console.log('hotdog')}}>Hotdog</button> */}
+        </div>
       </div>
     </div>
   );
